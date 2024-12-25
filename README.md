@@ -33,4 +33,5 @@ The Username field is for what name that person should chat with.
 8. Test to see if it works (http://YourIpAddress:80 | You do not need to add the 80 cause its http default)
 
 # Bugs
-For now the only bug i know of is that if u login with the authcode u cant send files
+1. Doesnt Reload messages after a few seconds (Probebly didnt even add this in the code)
+2. Upload does not work after Authcode login
