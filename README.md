@@ -2,7 +2,7 @@
 A Simple Flask Hosted Messaging Service
 
 # Features
-1. File Upload/Download (some image types, pdf)
+1. File Upload/Download ('png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm', 'ogg', 'pdf')
 2. Messaging (Works like a groupchat, NO INDIVIDUAL CHATS)
 3. Accounts (Google Spreadsheet)
 
@@ -19,6 +19,14 @@ The Email field is used to login just like the Password Field.
 The Color Field u can choose what color which person chats in.
 
 The Username field is for what name that person should chat with.
+
+# How to setup
+1. Create google drive&sheets api
+2. Download Api Credentials File (Move into the root directory of your code)
+3. dowload code
+4. edit server.py (Google Sheets configuration & app.secret_key)
+5. install requirements.txt
+6. start server.py
 
 # Bugs
 For now the only bug i know of is that if u login with the authcode u cant send files
