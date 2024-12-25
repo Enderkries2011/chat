@@ -8,9 +8,9 @@ import time
 import threading
 
 # Google Sheets configuration
-JSON_KEY_FILE = 'cgat-437117-9c8acbec337e.json'
-SPREADSHEET_NAME = 'Chat user data'
-WORKSHEET_NAME = 'Sheet1'
+JSON_KEY_FILE = 'yourapifile.json'
+SPREADSHEET_NAME = 'TheNameOFTheSpreadSheet'
+WORKSHEET_NAME = 'Probobly Sheet1 (Check left under)'
 
 # Set up credentials and client
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -18,7 +18,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(JSON_KEY_FILE, scope)
 client = gspread.authorize(creds)
 
 app = Flask(__name__)
-app.secret_key = 'unk090vo5555id909nown'  # Needed for session management
+app.secret_key = '0987654231'  # Needed for session management
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
