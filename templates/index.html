@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://raw.githubusercontent.com/Enderkries2011/chat.assets/refs/heads/main/galaxy-2-sars.jpg');
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        #auth-container, #chat-container, #error-container {
+            width: 60%;
+            max-width: 800px;
+            background-color: rgba(54, 57, 63, 0.9); /* Slightly transparent background */
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #messages {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #2f3136;
+        }
+        #messages div {
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #40444b;
+            border-radius: 5px;
+            position: relative;
+        }
+        #email-input, #password-input, #message-input {
+            width: calc(100% - 60px);
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #40444b;
+            color: white;
+            margin-bottom: 10px;
+        }
+        #set-auth-btn, #send-btn, #logout-btn {
+            padding: 10px;
+            border: none;
+            background-color: #7289da;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #error-container {
+            display: none;
+            color: #d9534f;
+            background-color: #f2dede;
+            border: 1px solid #d9534f;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #chat-container {
+            display: none;
+        }
+        #input-container {
+            display: flex;
+            align-items: center;
+        }
+        #file-input {
+            display: none;
+        }
+        .file-icon {
+            cursor: pointer;
+            margin-left: 10px;
+            width: 30px;
+            height: 30px;
+            background: url('https://raw.githubusercontent.com/Enderkries2011/chat.assets/refs/heads/main/upload.png') no-repeat center center / contain;
+        }
+        .embed-container {
+            padding: 10px;
+            background-color: #2f3136;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        #previewModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #modalContent {
+            position: relative;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        #modalContent img, #modalContent video, #modalContent iframe {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #closeModal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+        }
+        .file-info {
+            background: #e9ecef;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 4px;
+            color: black;
+        }
+        .file-preview {
+            cursor: pointer;
+            max-width: 100px;
+            height: auto;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: url('https://raw.githubusercontent.com/Enderkries2011/chat.assets/refs/heads/main/info.png') no-repeat center center / contain;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: #555;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 100;
+        }
+        .message-container {
+            position: relative;
+        }
+        .message-container:hover .tooltip {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div id="auth-container">
+    <h2>Login</h2>
+    <input type="text" id="email-input" placeholder="Email" required>
+    <input type="password" id="password-input" placeholder="Password" required>
+    <button id="set-auth-btn">Login</button>
+    <div id="error-container"></div>
+</div>
+
+<div id="chat-container">
+    <h2>Chat</h2>
+    <div id="messages"></div>
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message..." required>
+        <button id="send-btn">Send</button>
+        <button id="logout-btn">Logout</button>
+        <div class="file-icon" onclick="document.getElementById('file-input').click()"></div>
+        <input type="file" id="file-input" accept=".png, .jpg, .jpeg, .gif, .mp4, .webm, .ogg, .pdf">
+    </div>
+</div>
+
+<div id="previewModal">
+    <div id="modalContent">
+        <span id="closeModal">×</span>
+        <img id="modalImage" style="display: none;">
+        <video id="modalVideo" controls style="display: none;"></video>
+        <iframe id="modalPDF" style="display: none;" width="100%" height="500px"></iframe>
+    </div>
+</div>
+
+<script>
+    const authContainer = document.getElementById('auth-container');
+    const chatContainer = document.getElementById('chat-container');
+    const errorContainer = document.getElementById('error-container');
+    const messagesDiv = document.getElementById('messages');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const messageInput = document.getElementById('message-input');
+    const fileInput = document.getElementById('file-input');
+    const previewModal = document.getElementById('previewModal');
+    const closeModal = document.getElementById('closeModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalVideo = document.getElementById('modalVideo');
+    const modalPDF = document.getElementById('modalPDF');
+    const logoutButton = document.getElementById('logout-btn');
+
+    // Check if user is logged in
+    const cookieValue = document.cookie.split('; ').find(row => row.startsWith('username='));
+    if (cookieValue) {
+        authContainer.style.display = 'none';
+        chatContainer.style.display = 'block';
+        loadMessages();
+    }
+
+    // Function to handle authentication
+    document.getElementById('set-auth-btn').onclick = function () {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        
+        fetch('/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => {
+            if (response.ok) {
+                document.cookie = `username=${email}; path=/;`; // Set cookie for user
+                authContainer.style.display = 'none';
+                chatContainer.style.display = 'block';
+                loadMessages();
+            } else {
+                errorContainer.innerText = 'Invalid email or password';
+                errorContainer.style.display = 'block';
+            }
+        });
+    };
+
+    // Function to load messages
+    function loadMessages() {
+        fetch('/get_messages')
+            .then(response => response.json())
+            .then(messages => {
+                messagesDiv.innerHTML = '';
+                messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    const timestamp = new Date(msg.timestamp * 1000).toLocaleString();
+                    let fileContent = '';
+                
+                    // Check if the message indicates a file upload
+                    if (msg.message.startsWith('FILE: ')) {
+                        const filename = msg.message.substring(6); // Remove 'FILE: ' prefix
+                        const fileUrl = `/uploads/${filename}`; // Construct the URL to access the file
+                        const fileExtension = filename.split('.').pop().toLowerCase();
+                
+                        // Render based on file type
+                        if (['png', 'jpg', 'jpeg', 'gif'].includes(fileExtension)) {
+                            fileContent = `<img class="file-preview" src="${fileUrl}" alt="${filename}" onclick="showPreview('${fileUrl}', 'image')">`;
+                        } else if (['mp4', 'webm', 'ogg'].includes(fileExtension)) {
+                            fileContent = `<video class="file-preview" src="${fileUrl}" controls onclick="showPreview('${fileUrl}', 'video')"></video>`;
+                        } else if (fileExtension === 'pdf') {
+                            fileContent = `<a href="#" onclick="showPreview('${fileUrl}', 'pdf')">${filename}</a>`;
+                        } else {
+                            fileContent = `<a href="${fileUrl}" download>${filename}</a>`;
+                        }
+                
+                        fileContent += `<div class="file-info">Uploaded by: ${msg.username} | Size: ${msg.size} | ${timestamp}</div>`;
+                    } else {
+                        // Update the message display to format the username and message text
+                        msgDiv.innerHTML = `<strong style="color: black; font-style: italic;">${msg.username}</strong>: <span style="color: ${msg.color};">${msg.message}</span>`;
+                        msgDiv.innerHTML += `<span class="info-icon" title="Uploaded by: ${msg.username} | ${timestamp}"></span>`;
+                    }
+                
+                    msgDiv.innerHTML += fileContent;
+                    msgDiv.innerHTML += `<span class="tooltip">${msg.username} | ${timestamp}</span>`;
+                    msgDiv.classList.add('message-container');
+                    messagesDiv.appendChild(msgDiv);
+                });
+            });
+    }
+    
+
+    // Function to show preview modal
+    function showPreview(url, type) {
+        if (type === 'image') {
+            modalImage.src = url;
+            modalImage.style.display = 'block';
+            modalVideo.style.display = 'none';
+            modalPDF.style.display = 'none';
+        } else if (type === 'video') {
+            modalVideo.src = url;
+            modalVideo.style.display = 'block';
+            modalImage.style.display = 'none';
+            modalPDF.style.display = 'none';
+        } else if (type === 'pdf') {
+            modalPDF.src = url;
+            modalPDF.style.display = 'block';
+            modalImage.style.display = 'none';
+            modalVideo.style.display = 'none';
+        }
+        previewModal.style.display = 'flex';
+    }
+
+    // Close modal
+    closeModal.onclick = function() {
+        previewModal.style.display = 'none';
+        modalImage.style.display = 'none';
+        modalVideo.style.display = 'none';
+        modalPDF.style.display = 'none';
+    }
+
+    // Send message
+    document.getElementById('send-btn').onclick = function () {
+        const email = emailInput.value;
+        const message = messageInput.value;
+
+        fetch('/send_message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, message })
+        })
+        .then(response => {
+            if (response.ok) {
+                messageInput.value = '';  // Clear the input field
+                loadMessages();  // Reload messages
+            }
+        });
+    };
+
+    // Upload file
+    fileInput.onchange = function () {
+        const email = emailInput.value;
+        const file = fileInput.files[0];
+        
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('email', email);
+            fetch('/upload_file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    loadMessages();  // Reload messages
+                }
+            });
+        }
+    };
+
+    // Logout function
+    logoutButton.onclick = function () {
+        document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // Clear cookie
+        authContainer.style.display = 'block';
+        chatContainer.style.display = 'none';
+    };
+
+</script>
+
+</body>
+</html>
